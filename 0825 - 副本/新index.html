@@ -1,0 +1,526 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FHS演示系统</title>
+    <link rel="stylesheet" href="${basePath}/css/index.css">
+    <link rel="stylesheet" href="${basePath}/font/iconfont.css">
+</head>
+<body>
+    <div id="box">
+        <!-- 页面加载前的动画 -->
+        <div id="app" v-if="loadBefore">
+            <div id="loader-wrapper">
+            <div id="loader"></div>
+            <div class="loader-section section-left"></div>
+            <div class="loader-section section-right"></div>
+            </div>
+        </div>
+        <!-- 正文 -->
+        <div id="box" @click='rightKey=false' v-cloak else> 
+            <!-- 大导航 -->
+            <div class="header">
+                    <div  class="header-left">
+                        <img :class="{'header-left-ico':ischange}" src="${systemIcon!'/images/default_avatar.png'}">
+                        <p class="header-left-item" v-show='!ischange'>${systemTitle}</p>
+                    </div>
+                    <div class="header-right" :class={'change':ischange}>
+                        <button @click='handlechange()' class="header-right-left iconfont icon-daohangshouqi" v-show='!ischange'></button>
+                        <button @click='handlechange()' class="header-right-left iconfont icon-daohangzhankai" v-show='ischange'></button>
+                        <li v-for='(item,index) in database' :key='index' @click='cutSilder(item)' :class={'header-active':titleId===item.id}>
+                            <p>{{item.name}}</p>
+                        </li>
+                    </div>
+                    <div class="header-rright">
+                        ${session.sessionUser.userName}
+                        <span class="pull-down iconfont icon-xiala1"></span>
+                        <span class="upward iconfont icon-xiangshang"></span>
+                        <div class="user-pull">
+                            <div class="user-pull-up">
+                                <div><a @click="handlejichu()">基本资料</a></div>
+                                <div><a @click="handlexiugai">修改密码</a></div>
+                            </div>
+                            <div class="user-pull-down"><a href="${loginOutUrl}">退出</a></div>
+                        </div>
+                    </div>
+            </div>
+            <div class="content">
+                <!-- 侧边导航 -->
+                <div class="silder" >
+                    <li v-for='(item,index) in list' :key='index'>
+                        <div :class="[{'active silder-item':id===item.id&&!item.sonMenu[0]},{'activete silderte-item':id===item.id&&item.sonMenu[0]},{'silder-item':id!==item.id&&!item.sonMenu[0]},{'silderte-item':id!==item.id&&item.sonMenu[0]}]"  @click='handleclick(item,index)'>
+                            <div class="silder-border"></div>
+                            <div :style="'background-image:url(' + item.serverUrl + '/images/menu/'+item.image +'.png)'" class="slider-item-ico"></div>
+                            <p :class={'slider-change':ischange}>{{item.name}}</p> 
+                            <span v-show="!item.controlAndFree&&item.sonMenu[0]" class="iconfont icon-xiala1"></span>
+                            <span v-show="item.controlAndFree&&item.sonMenu[0]" class="iconfont icon-xiangshang"></span>
+                        </div>
+                        <ul v-show="item.controlAndFree&&!ischange" class="silderSec">
+                            <li v-for='(item,index) in listSec' :key='index' @click='handleclick(item)'  class="silderSec-item"  :class={'active':id===item.id}>{{item.name}}</li>
+                        </ul>
+                    </li>
+                </div>
+                <div class="content-box" :class={'change':ischange}>
+                    <div class="top">
+                        <div class="top-back" ref="topshow">
+                            <ul :style="{'margin-left':-valueL+'px','margin-right':-valueR+'px'}" ref="topItem">
+                                <li @click='handleclickTop(home)' :class={'top-active':id===home.id} class="iconfont icon-fangzi homes" @contextmenu.prevent.stop="rightClick(home,$event)">
+                                </li>
+                                <li v-for="(item,index) in title" @click='handleclickTop(item)' :class={'top-active':id===item.id}  :key="index" @contextmenu.prevent.stop="rightClick(item,$event)">
+                                    {{item.name}}
+                                    <button @click='deletes(index)' class="iconfont icon-guanbi"></button>
+                                </li>
+                            </ul>
+                        </div>
+                        <button @click='topRight' class="top-right iconfont icon-xiangyoushuangjiantou"></button>
+                        <button @click='topLeft' class="top-left iconfont icon-xiangzuoshuangjiantou"></button>
+                    </div>
+                    <div v-show="loadOk">
+                        <h2>正在加载，请稍等。。。</h2>
+                    </div>
+                    <div class="iframe-box" v-show="isShowIframeBox">
+                        <iframe  class="bottom" src="${index_right_path}" frameborder="0"  scrolling="auto" v-show="id == home.id"></iframe>
+                        <iframe  class="bottom" v-bind:src="item.serverUrl + 'ms/redirect?call=' + item.url" id="ifra"  frameborder="0" scrolling="auto" v-for="(item,index) in title" :key="index" v-show="item.iframeShow"></iframe>
+                    </div>
+                    <div class="iframe-box" v-show="!isShowIframeBox">
+                        <iframe  class="bottom" v-bind:src="'${basePath}/b/page-ms-index/' + item.url" id="ifra"  frameborder="0" scrolling="auto" v-for="(item,index) in title" :key="index" v-show="item.iframeShows"></iframe>
+                    </div>
+                </div>
+                <ul class="top-rright-trag" v-show='rightKey' :style="{'position': 'absolute','top':mouseLocationY+'px','left':mouseLocationX+'px'}">
+                    <li @click='otherClose()'>关闭其他标签页</li>
+                    <li @click='allClose()'>关闭所有标签页</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" src="${fhs_static_url}js/jquery.min.js"></script>
+<script src="${basePath}/js/vue.js"></script>
+<script>
+    new Vue({
+        el:'#box',
+        data:{
+            database:[],
+            list:[],  //侧导航一级菜单的数据
+            listSec:[],// 二级菜单的数据
+            title:[],
+            // home:{id:14,src:'./home.html',iframeShow:false},
+            home:{},
+            id:'',
+            titleId:'',
+            ischange:false,
+            valueL:'',
+            valueR:'',
+            topWidth:'',
+            lastDiff:'',
+            diff:'',
+            winWidth:'',
+            tryData:false,
+            rightKey:false,
+            topItemWidth:121,//每个轮播导航项的宽
+            mouseLocationX:'',//鼠标右击时x坐标
+            mouseLocationY:'',//鼠标右击时y坐标
+            loadOk:false,
+            loadBefore:true,
+            isShowIframeBox:true,
+        },
+        beforeMount:function(){
+                // alert("确定执行")
+                this.loadBefore = false
+        },
+
+        mounted(){
+            this.topWidth = this.$refs.topshow.clientWidth
+            var _this = this;
+            _this.winWidth = window.innerWidth
+            this.silderShow()
+            //当浏览器被重置大小时执行
+            window.onresize = function(){ 
+                _this.winWidth = window.innerWidth
+                console.log(_this.winWidth)
+            };
+            
+            var iframe = document.querySelector('#ifra')
+           if(iframe){
+                if (iframe.attachEvent) {
+                    iframe.attachEvent('onload', function () {
+                        // iframe加载完毕以后执行操作
+                        console.log('iframe已加载完毕')
+                        this.loadOk = true
+                    })
+                    } else {
+                    iframe.onload = function () {
+                        // iframe加载完毕以后执行操作
+                        console.log('iframe已加载完毕')
+                        this.loadOk = true
+                        console.log(this.loadOk)
+                    }
+                }
+           }
+        },
+        watch:{ 
+            //监听屏幕宽度的变化来获取最新的topWidth
+            winWidth(val){
+                this.topWidth = this.$refs.topshow.clientWidth
+                console.log(this.winWidth)
+                this.silderShow()
+
+                this.diff = this.topWidth - 61 - this.title.length * this.topItemWidth
+                   if(this.diff < 0){   
+                        this.valueL = 0 - this.diff
+                        this.valueR = 0 
+                    }
+            }
+        },
+        created(){
+            this.req()
+
+            // 初始化
+            this.initialize()
+        },
+        
+        methods: {
+            req(){
+                let _this = this
+                $.ajax({
+                    url: '${basePath}ms/sysUser/seachMenuByUser?menuType=${parameter.menuType!1}',
+                    async: false,
+                    type: "GET",
+                    success:function(data) {
+                        _this.database = data
+                    },
+                    dataType: 'json'
+                });
+            },
+
+            initialize(){
+                this.id = this.home.id
+                this.titleId = this.database[0].id
+                this.list = this.database[0].sonMenu
+                this.title = []
+            },
+            //页面宽<992px,自动收缩侧导航，反之亦然
+            silderShow(){
+                console.log(this.winWidth)
+                if(this.winWidth > 992 ){
+                    this.ischange = false;
+                }else{
+                    this.ischange = true
+                }
+            },
+            // 点击侧导航
+            handleclick(item,index){
+                this.isShowIframeBox = true
+                //判断是否有二级菜单，有，展示并赋值，并不会新增到top
+                if(item.sonMenu[0]){
+                    this.listSec = item.sonMenu
+                    console.log(item.controlAndFree)
+                    //给获取到的数据增加一对controlAndFree = false来控制二级菜单的收放
+                    if(!item.controlAndFree){
+                        this.database.forEach(x=>{
+                            x.sonMenu.forEach(y=>{
+                                if(y.sonMenu[0]){  
+                                    this.$set(y,'controlAndFree',false)   //触发视图实时更新
+                                }
+                                
+                            })
+                        })
+                    }
+                    
+                    item.controlAndFree = !item.controlAndFree
+                }else{
+                    this.noSecNav(item)
+                }
+                
+            },
+            // 没有二级菜单，单击新增到top或者回显
+            noSecNav(item){ 
+                // 给iframe的src赋值
+                // this.contents = item.src
+                 if(this.title.length == 0){
+                    this.title.push(item)
+                }
+                let arr = this.title
+                for(var i = 0;i < this.title.length;i++){
+                    if(item.id === this.title[i].id){
+                        this.lookIt(i)
+                        this.id=item.id
+                        this.database.forEach(x=>{
+                            x.sonMenu.forEach(y=>{
+                                if(y.sonMenu[0]){                            
+                                    y.sonMenu.forEach(z=>{               
+                                        this.$set(z,'iframeShow',false)   //触发视图实时更新
+                                    })
+                                }else{                                  
+                                this.$set(y,'iframeShow',false)   //触发视图实时更新  
+                                }
+                                
+                            })
+                        })
+                        item.iframeShow = true
+                        this.tryData = false
+                        break 
+                    }else{
+                        this.tryData = true
+                    }
+                } 
+                // 判断轮播导航项 在top 中没有（this.tryData === true）直接push，并左移
+                if(this.tryData === true){
+                    arr.push(item)
+                    this.id=item.id
+                    this.database.forEach(x=>{
+                        x.sonMenu.forEach(y=>{
+                            if(y.sonMenu[0]){                            
+                                y.sonMenu.forEach(z=>{               
+                                    this.$set(z,'iframeShow',false)   //触发视图实时更新
+                                })
+                            }else{                                  
+                                this.$set(y,'iframeShow',false)   //触发视图实时更新    
+                            }
+                            
+                        })
+                    })
+                    item.iframeShow = true
+                    this.title = [...new Set(arr)]
+
+                    this.diff = this.topWidth - 61 - this.title.length * this.topItemWidth
+                    if(this.diff > 0){
+                        if(this.diff < this.topItemWidth){
+                            this.lastDiff = this.diff
+                        }
+                    }else if(this.diff < 0){
+                        if(this.diff > -this.topItemWidth){
+                            this.valueL = this.topItemWidth - this.lastDiff
+                            this.lastDiff = this.diff
+                        }else{
+                            this.valueL = this.valueL + this.topItemWidth
+                        }
+                    }
+                }
+            },
+            //被选中的item 移动到可看到的位置( i为选中的item在整个title中的下标)
+            lookIt(i){
+                let longL = (i+1)* this.topItemWidth                 //该item右边 到back左边的距离
+                let longR =  this.topWidth - i* this.topItemWidth    //该item左边 到back右边的距离
+                //轮播导航项高亮隐藏在左边  需向右移动
+                let dataL = this.valueL
+                if(this.valueL >= longL){
+                    this.valueL -= (dataL - i* this.topItemWidth)
+                    this.valueR += (dataL - i* this.topItemWidth)
+                }
+                //轮播导航项高亮隐藏在右边  需向左移动
+                let dataR = this.valueR
+                if(this.valueR >= longR){
+                    this.valueR -= (dataR - (this.title.length - i -1)* this.topItemWidth)
+                    this.valueL += (dataR - (this.title.length - i -1)* this.topItemWidth)
+                }
+            },
+            // 点击 top item
+            handleclickTop(item){
+                this.id = item.id
+                if(item.id != "修改密码" && item.id != "基础资料"){
+                    this.isShowIframeBox = true
+                    this.title.forEach(item=>{
+                        if(item.id == "修改密码" || item.id == "基础资料"){
+                        this.$set(item,'iframeShow',false)
+                    }
+                })
+                }else{
+                    this.isShowIframeBox = false
+                    this.title.forEach(i=>{
+                        this.$set(i,'iframeShows',false)
+                })
+                    this.$set(item,'iframeShows',true)
+                }
+
+                this.database.forEach(x=>{
+                    x.sonMenu.forEach(y=>{
+                        if(y.sonMenu[0]){       
+                            this.$set(y,'controlAndFree',false)                 //判断是否有二级菜单
+                            y.sonMenu.forEach(z=>{
+                                this.$set(z,'iframeShow',false)            //二级菜单的回显header,侧导航list,打开相应的二级菜单
+                                if(item.id === z.id){
+                                    this.titleId=x.id
+                                    this.list = x.sonMenu
+                                    this.listSec = y.sonMenu
+                                    this.$set(y,'controlAndFree',true)
+                    }
+                            })
+                        }else{   
+                            this.$set(y,'iframeShow',false)                                 //一级菜单的回显header和侧导航list
+                            if(y.id === item.id){
+                                this.titleId=x.id
+                                this.list = x.sonMenu
+                            }
+                        }
+                    })
+                })
+                this.$set(item,'iframeShow',true)
+            },
+            // 侧边栏的收放
+            handlechange(){
+                this.ischange=!this.ischange
+            },
+            // 轮播导航的右按钮
+            topRight(){
+                if(this.valueR < 0){
+                    this.valueR = 0
+                }
+                let topwidth = 0-this.topWidth
+                if(this.diff < topwidth){
+                        if(this.valueR > topwidth){
+                        this.valueL += this.topWidth
+                        this.valueR -= this.topWidth
+                    }else if(this.valueR > 0){
+                        this.valueL += this.diff
+                        this.valueR =0
+                    }
+                }else if (this.diff < 0 ){
+                    this.valueL = 0 - this.diff
+                    this.valueR = 0
+                }
+                
+            },
+            // 轮播导航的左按钮
+            topLeft(){
+                if(this.valueL < 0){
+                    this.valueL = 0
+                }
+                let topwidth = 0-this.topWidth
+                if(this.diff < topwidth){
+                        if(this.valueL > topwidth){
+                        this.valueR += this.topWidth
+                        this.valueL -= this.topWidth
+                    }else if(this.valueL > 0){
+                        this.valueR += this.diff
+                        this.valueL =0
+                    }
+                }else if (this.diff < 0 ){
+                    this.valueR = 0 - this.diff
+                    this.valueL = 0
+                }
+                
+            },
+            // 关闭其他项
+            otherClose(){
+                this.title.forEach(item => {
+                    if(item.id === this.id){
+                        this.title = []
+                        this.title.push(item)
+                    }
+                });
+                this.rightKey = false
+                this.valueL =0
+                this.valueR =0
+            },
+            // 关闭所以项
+            allClose(){
+                this.initialize()   // 初始化
+                this.rightKey = false
+                this.valueL =0
+                this.valueR =0
+            },
+            // 删除某一项
+            deletes(index,e){
+                let aft = this.title[index+1]
+                let pre= this.title[index-1]
+
+                this.title.splice(index,1)
+                // 阻止事件冒泡
+                if(e&& e.stopPropagation){
+                    event.stopPropagation()
+                }else{
+                    event.cancelBubble = true; 
+                }
+                //焦点到删除的下一项，若没有焦点到上一项，都没有则初始化
+                if(aft){
+                    this.handleclickTop(aft)
+                    this.lookIt(index+1)
+                }else if(pre){
+                    this.handleclickTop(pre)
+                    this.lookIt(index-1)
+                }else{
+                    this.initialize()  // 初始化
+                }
+            }, 
+            // 切换侧导航
+            cutSilder(item){
+                this.list = item.sonMenu
+                this.titleId = item.id
+            },
+            // top item 的右键功能
+            rightClick(i,e){
+                console.log(i)
+                console.log(e)
+                this.rightKey = true
+                this.handleclickTop(i)
+                this. mouseLocationX = e.clientX
+                this. mouseLocationY = e.clientY
+            },
+            //点击 "基础资料"
+            handlejichu(){
+                this.isShowIframeBox = false
+                let obj = {name:'基础资料',url:'admin_info_update',iframeShows:false,id:'基础资料'}
+                var norepead = false
+                if(this.title[0]){
+                    for(var i=0;i<this.title.length;i++){
+                        if(this.title[i].name == '基础资料'){
+                            norepead = true
+                            break
+                        }else{
+                            norepead = false
+                        }
+                    }
+                    if(norepead == false){
+                        this.title.push(obj)
+                    }
+                }else{
+                    this.title.push(obj)
+                }
+                this.title.forEach(item=>{
+                    if(item.name == '基础资料'){
+                    this.$set(item,'iframeShows',true)
+                    }else{
+                        this.$set(item,'iframeShows',false)
+                    }
+                })
+                this.id = '基础资料'
+                this.title = [...new Set(this.title)]
+
+
+            },
+            //点击 "修改密码"
+            handlexiugai(){
+                this.isShowIframeBox = false
+                let obj = {name:'修改密码',url:'admin_pass_update',iframeShows:false,id:'修改密码'}
+                var norepead = false
+                if(this.title[0]){
+                    for(var i=0;i<this.title.length;i++){
+                        if(this.title[i].name == '修改密码'){
+                            norepead = true
+                            break
+                        }
+                    }
+                    if(norepead == false){
+                        this.title.push(obj)
+                    }
+                }else{
+                    this.title.push(obj)
+                }
+                this.title.forEach(item=>{
+                    if(item.name == '修改密码'){
+                    this.$set(item,'iframeShows',true)
+                }else{
+                    this.$set(item,'iframeShows',false)
+                }
+                })
+                this.id = '修改密码'
+                this.title = [...new Set(this.title)]
+
+            }
+        },
+    })
+</script>
+
+</html>

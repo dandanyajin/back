@@ -1,0 +1,807 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="./font_8ibs1kfrvo/iconfont.css">
+</head>
+<body>
+    <div id="box">
+        <!-- 页面加载前的动画 -->
+        <div id="app" v-if="loadBefore">
+            <div id="loader-wrapper">
+            <div id="loader"></div>
+            <div class="loader-section section-left"></div>
+            <div class="loader-section section-right"></div>
+            </div>
+        </div>
+        <!-- 正文 -->
+        <div id="box" @click='rightKey=false' v-cloak> 
+            <!-- 大导航 -->
+            <div class="header">
+                    <div  class="header-left">
+                        <span class="iconfont icon-diqiu" :class="{'header-left-ico':ischange}"></span>
+                        <p class="header-left-item" v-show='!ischange'>后台管理系统</p>
+                    </div>
+                    <div class="header-right" :class={'change':ischange}>
+                        <button @click='handlechange()' class="header-right-left iconfont icon-daohangshouqi" v-show='!ischange'></button>
+                        <button @click='handlechange()' class="header-right-left iconfont icon-daohangzhankai" v-show='ischange'></button>
+                        <li v-for='(item,index) in database' :key='index' @click='cutSilder(item)' :class={'header-active':titleId===item.id}>
+                            <!-- <div class="header-border"></div> -->
+                            <p>{{item.name}}</p>
+                        </li>
+                    </div>
+                    <div class="header-rright">
+                        admin
+                        <span class="pull-down iconfont icon-xiala1"></span>
+                        <span class="upward iconfont icon-xiangshang"></span>
+                        <div class="user-pull">
+                            <div class="user-pull-up">
+                                <div>基本资料</div>
+                                <div>修改密码</div>
+                            </div>
+                            <div class="user-pull-down">退出</div> 
+                        </div>
+                    </div>
+            </div>
+            <div class="content">
+                <!-- 侧边导航 -->
+                <div class="silder" >
+                    <li v-for='(item,index) in list' :key='index'>
+                        <div :class="[{'active silder-item':id===item.id&&!item.sonMenu[0]},{'activete silderte-item':id===item.id&&item.sonMenu[0]},{'silder-item':id!==item.id&&!item.sonMenu[0]},{'silderte-item':id!==item.id&&item.sonMenu[0]}]"  @click='handleclick(item,index)'>
+                            <div class="silder-border"></div>
+                            <div :style="'background-image:url(' + item.serverUrl + '/images/menu/'+item.image +'.png)'" class="slider-item-ico"></div>
+                            <p :class={'slider-change':ischange}>{{item.name}}</p> 
+                            <span v-show="!item.controlAndFree&&item.sonMenu[0]" class="iconfont icon-xiala1"></span>
+                            <span v-show="item.controlAndFree&&item.sonMenu[0]" class="iconfont icon-xiangshang"></span>
+                        </div>
+                        <ul v-show="item.controlAndFree&&!ischange" class="silderSec">
+                            <li v-for='(item,index) in listSec' :key='index' @click='handleclick(item)'  class="silderSec-item"  :class={'active':id===item.id}>{{item.name}}</li>
+                        </ul>
+                    </li>
+                </div>
+                <div class="content-box" :class={'change':ischange}>
+                    <div class="top">
+                        <div class="top-back" ref="topshow">
+                            <ul :style="{'margin-left':-valueL+'px','margin-right':-valueR+'px'}" ref="topItem">
+                                <li @click='handleclickTop(home)' :class={'top-active':id===home.id} class="iconfont icon-fangzi homes" @contextmenu.prevent.stop="rightClick(home,$event)">
+                                </li>
+                                <li v-for="(item,index) in title" @click='handleclickTop(item)' :class={'top-active':id===item.id}  :key="index" @contextmenu.prevent.stop="rightClick(item,$event)">
+                                    {{item.name}}
+                                    <button @click='deletes(index)' class="iconfont icon-guanbi"></button>
+                                </li>
+                            </ul>
+                        </div>
+                        <button @click='topRight' class="top-right iconfont icon-xiangyoushuangjiantou"></button>
+                        <button @click='topLeft' class="top-left iconfont icon-xiangzuoshuangjiantou"></button>
+                    </div>
+                    <div v-show="loadOk">
+                        <h2>正在加载，请稍等。。。</h2>
+                    </div>
+                    <div class="iframe-box">
+                        <iframe  class="bottom" src="./home.html" frameborder="0"  scrolling="auto" v-show="id == home.id"></iframe>
+                        <iframe  class="bottom" v-bind:src="item.serverUrl + 'ms/redirect?call=' + item.url" id="ifra"  frameborder="0" scrolling="auto" v-for="(item,index) in title" :key="index" ></iframe>
+                    </div>
+                </div>
+                <ul class="top-rright-trag" v-show='rightKey' :style="{'position': 'absolute','top':mouseLocationY+'px','left':mouseLocationX+'px'}">
+                    <li @click='otherClose()'>关闭其他标签页</li>
+                    <li @click='allClose()'>关闭所有标签页</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script src="./lib/vue.js"></script>
+<script>
+    new Vue({
+        el:'#box',
+        data:{
+            database:[
+    {
+        "icon": null,
+        "id": 29,
+        "image": "01ad9fd6c8194e79843ce9f220c136a3",
+        "menuServer": 1,
+        "name": "系统管理",
+        "namespace": "sys",
+        "orderIndex": 0,
+        "serverUrl": "http://114.116.21.147:8081/",
+        "sonMenu": [
+            {
+                "icon": null,
+                "id": 988,
+                "image": "map",
+                "menuServer": 1,
+                "name": "地区管理",
+                "namespace": "area",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//b/page-ms-basics-area/area_list"
+            },
+            {
+                "icon": null,
+                "id": 1101,
+                "image": "service",
+                "menuServer": 1,
+                "name": "服务管理",
+                "namespace": "sett_ms_menu_server",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//ms/pagex/sett_ms_menu_server_list.jsp"
+            },
+            {
+                "icon": null,
+                "id": 1100,
+                "image": "sub_system",
+                "menuServer": 1,
+                "name": "子系统管理",
+                "namespace": "sett_ms_system",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//ms/pagex/sett_ms_system_list.jsp"
+            },
+            {
+                "icon": null,
+                "id": 30,
+                "image": "menu",
+                "menuServer": 1,
+                "name": "菜单管理",
+                "namespace": "sysMenu",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081/b/page-ms-basics-menu/menu_main_frame"
+            },
+            {
+                "icon": null,
+                "id": 781,
+                "image": "org",
+                "menuServer": 1,
+                "name": "机构管理",
+                "namespace": "sysOrganization",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//b/page-ms-basics-org/sys_organization_frame"
+            },
+            {
+                "icon": null,
+                "id": 40,
+                "image": "role",
+                "menuServer": 1,
+                "name": "角色管理",
+                "namespace": "sysRole",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081/b/page-ms-basics-role/sys_role_main_frame"
+            },
+            {
+                "icon": null,
+                "id": 41,
+                "image": "user",
+                "menuServer": 1,
+                "name": "后管用户",
+                "namespace": "sysUser",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081/b/page-ms-basics-sysuser/sys_user_main_frame"
+            },
+            {
+                "icon": null,
+                "id": 1104,
+                "image": "sys_info",
+                "menuServer": 1,
+                "name": "系统信息",
+                "namespace": "sys",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//b/page-ms-pub-sys/sys_info"
+            },
+            {
+                "icon": null,
+                "id": 1105,
+                "image": "timer",
+                "menuServer": 1,
+                "name": "定时任务管理",
+                "namespace": "task",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//ms/pagex/task_list.jsp"
+            },
+            {
+                "icon": null,
+                "id": 1130,
+                "image": "book",
+                "menuServer": 1,
+                "name": "字典",
+                "namespace": "wordbook",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081/b/page-ms-basics-wordbook/wordbook_main_frame"
+            },
+            {
+                "icon": null,
+                "id": 1137,
+                "image": "monitor",
+                "menuServer": 1,
+                "name": "druid监控",
+                "namespace": "druid",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//druid/spring.html"
+            },
+            {
+                "icon": null,
+                "id": 1143,
+                "image": "doc",
+                "menuServer": 1,
+                "name": "swagger",
+                "namespace": "swagger",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//b/page-ms-swagger/swagger"
+            },
+            {
+                "icon": null,
+                "id": 1144,
+                "image": "redis",
+                "menuServer": 1,
+                "name": "redis管理",
+                "namespace": "#",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//redis/index"
+            }
+        ],
+        "url": "http://114.116.21.147:8081/#"
+    },
+    {
+        "icon": null,
+        "id": 1106,
+        "image": null,
+        "menuServer": 1,
+        "name": "工作流",
+        "namespace": "flow",
+        "orderIndex": 0,
+        "serverUrl": "http://114.116.21.147:8081/",
+        "sonMenu": [
+            {
+                "icon": null,
+                "id": 1107,
+                "image": "flow_sett",
+                "menuServer": 1,
+                "name": "工作流配置",
+                "namespace": "flow_sett",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [
+                    {
+                        "icon": null,
+                        "id": 1108,
+                        "image": null,
+                        "menuServer": 1,
+                        "name": "流程管理",
+                        "namespace": "flow_jbpm_xml",
+                        "orderIndex": 0,
+                        "serverUrl": "http://114.116.21.147:8081/",
+                        "sonMenu": [],
+                        "url": "http://114.116.21.147:8081//ms/pagex/flow_jbpm_xml_list.jsp"
+                    }
+                ],
+                "url": "http://114.116.21.147:8081/#"
+            },
+            {
+                "icon": null,
+                "id": 1111,
+                "image": "approval",
+                "menuServer": 1,
+                "name": "我的工作",
+                "namespace": "#",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [
+                    {
+                        "icon": null,
+                        "id": 1112,
+                        "image": null,
+                        "menuServer": 1,
+                        "name": "待办事项",
+                        "namespace": "act_ru_task",
+                        "orderIndex": 0,
+                        "serverUrl": "http://114.116.21.147:8081/",
+                        "sonMenu": [],
+                        "url": "http://114.116.21.147:8081//ms/pagex/act_ru_task_list.jsp"
+                    },
+                    {
+                        "icon": null,
+                        "id": 1113,
+                        "image": null,
+                        "menuServer": 1,
+                        "name": "办理历史",
+                        "namespace": "already_done",
+                        "orderIndex": 0,
+                        "serverUrl": "http://114.116.21.147:8081/",
+                        "sonMenu": [],
+                        "url": "http://114.116.21.147:8081//ms/pagex/already_done_list.jsp"
+                    },
+                    {
+                        "icon": null,
+                        "id": 1114,
+                        "image": null,
+                        "menuServer": 1,
+                        "name": "抄送我的",
+                        "namespace": "flow_instance",
+                        "orderIndex": 0,
+                        "serverUrl": "http://114.116.21.147:8081/",
+                        "sonMenu": [],
+                        "url": "http://114.116.21.147:8081//ms/pagex/flow_instance_list.jsp"
+                    },
+                    {
+                        "icon": null,
+                        "id": 1115,
+                        "image": null,
+                        "menuServer": 1,
+                        "name": "待认领",
+                        "namespace": "need_claim_task",
+                        "orderIndex": 0,
+                        "serverUrl": "http://114.116.21.147:8081/",
+                        "sonMenu": [],
+                        "url": "http://114.116.21.147:8081//ms/pagex/need_claim_task_list.jsp"
+                    }
+                ],
+                "url": "http://114.116.21.147:8081/#"
+            },
+            {
+                "icon": null,
+                "id": 1109,
+                "image": "demo",
+                "menuServer": 1,
+                "name": "demo",
+                "namespace": "demo",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [
+                    {
+                        "icon": null,
+                        "id": 1110,
+                        "image": null,
+                        "menuServer": 1,
+                        "name": "请假",
+                        "namespace": "demo_leave",
+                        "orderIndex": 0,
+                        "serverUrl": "http://114.116.21.147:8081/",
+                        "sonMenu": [],
+                        "url": "http://114.116.21.147:8081//ms/pagex/demo_leave_flow_grid.jsp"
+                    },
+                    {
+                        "icon": null,
+                        "id": 1116,
+                        "image": null,
+                        "menuServer": 1,
+                        "name": "涨薪",
+                        "namespace": "demo_salary_increase",
+                        "orderIndex": 0,
+                        "serverUrl": "http://114.116.21.147:8081/",
+                        "sonMenu": [],
+                        "url": "http://114.116.21.147:8081//ms/pagex/demo_salary_increase_flow_grid.jsp"
+                    }
+                ],
+                "url": "http://114.116.21.147:8081/#"
+            }
+        ],
+        "url": "http://114.116.21.147:8081/#"
+    },
+    {
+        "icon": null,
+        "id": 1139,
+        "image": null,
+        "menuServer": 1,
+        "name": "日志",
+        "namespace": "log",
+        "orderIndex": 0,
+        "serverUrl": "http://114.116.21.147:8081/",
+        "sonMenu": [
+            {
+                "icon": null,
+                "id": 1146,
+                "image": "log_report",
+                "menuServer": 1,
+                "name": "报表",
+                "namespace": "log_report",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//ms/pagex/log_report_list.jsp"
+            },
+            {
+                "icon": null,
+                "id": 1149,
+                "image": "log_one",
+                "menuServer": 1,
+                "name": "日志历史数据",
+                "namespace": "log_history_data",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//ms/pagex/log_history_data_list.jsp"
+            },
+            {
+                "icon": null,
+                "id": 1154,
+                "image": "log_login",
+                "menuServer": 1,
+                "name": "登录日志",
+                "namespace": "log_login",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//ms/pagex/log_login_list.jsp"
+            },
+            {
+                "icon": null,
+                "id": 1155,
+                "image": "run",
+                "menuServer": 1,
+                "name": "系统运行日志",
+                "namespace": "weblog",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//b/page-ms-weblog/weblog"
+            },
+            {
+                "icon": null,
+                "id": 1135,
+                "image": "operate_log",
+                "menuServer": 1,
+                "name": "日志管理",
+                "namespace": "log_operator_main",
+                "orderIndex": 0,
+                "serverUrl": "http://114.116.21.147:8081/",
+                "sonMenu": [],
+                "url": "http://114.116.21.147:8081//ms/pagex/log_operator_main_list.jsp"
+            }
+        ],
+        "url": "http://114.116.21.147:8081/#"
+    }
+],
+            list:[],  //侧导航一级菜单的数据
+            listSec:[],// 二级菜单的数据
+            title:[],
+            home:{id:14,src:'./home.html',iframeShow:false},
+            id:'',
+            titleId:'',
+            ischange:false,
+            valueL:'',
+            valueR:'',
+            topWidth:'',
+            lastDiff:'',
+            diff:'',
+            winWidth:'',
+            tryData:false,
+            rightKey:false,
+            topItemWidth:121,//每个轮播导航项的宽
+            mouseLocationX:'',//鼠标右击时x坐标
+            mouseLocationY:'',//鼠标右击时y坐标
+            loadOk:false,
+            loadBefore:true,
+        },
+        beforeMount:function(){
+                // alert("确定执行")
+                this.loadBefore = false
+            },
+        mounted(){
+            this.topWidth = this.$refs.topshow.clientWidth
+            var _this = this;
+            _this.winWidth = window.innerWidth
+            this.silderShow()
+            //当浏览器被重置大小时执行
+            window.onresize = function(){ 
+                _this.winWidth = window.innerWidth
+                console.log(_this.winWidth)
+            };
+            
+            var iframe = document.querySelector('#ifra')
+           if(iframe){
+                if (iframe.attachEvent) {
+                    iframe.attachEvent('onload', function () {
+                        // iframe加载完毕以后执行操作
+                        console.log('iframe已加载完毕')
+                        this.loadOk = true
+                    })
+                    } else {
+                    iframe.onload = function () {
+                        // iframe加载完毕以后执行操作
+                        console.log('iframe已加载完毕')
+                        this.loadOk = true
+                        console.log(this.loadOk)
+                    }
+                }
+           }
+        },
+        watch:{ 
+            //监听屏幕宽度的变化来获取最新的topWidth
+            winWidth(val){
+                this.topWidth = this.$refs.topshow.clientWidth
+                console.log(this.winWidth)
+                this.silderShow()
+
+                this.diff = this.topWidth - 61 - this.title.length * this.topItemWidth
+                   if(this.diff < 0){   
+                        this.valueL = 0 - this.diff
+                        this.valueR = 0 
+                    }
+            }
+        },
+        created(){
+            // 初始化
+            this.initialize()  
+
+        },
+        
+        methods: {
+            initialize(){
+                this.id = this.home.id
+                this.titleId = this.database[0].id
+                this.list = this.database[0].sonMenu
+                this.title = []
+            },
+            //页面宽<992px,自动收缩侧导航，反之亦然
+            silderShow(){
+                console.log(this.winWidth)
+                if(this.winWidth > 992 ){
+                    this.ischange = false;
+                }else{
+                    this.ischange = true
+                    // this.topWidth = this.topWidth + 160
+                }
+            },
+            // 点击侧导航
+            handleclick(item,index){
+                //判断是否有二级菜单，有，展示并赋值，并不会新增到top
+                if(item.sonMenu[0]){
+                    this.listSec = item.sonMenu
+                    console.log(item.controlAndFree)
+                    //给获取到的数据增加一对controlAndFree = false来控制二级菜单的收放
+                    if(!item.controlAndFree){
+                        this.database.forEach(x=>{
+                            x.sonMenu.forEach(y=>{
+                                if(y.sonMenu[0]){  
+                                    this.$set(y,'controlAndFree',false)   //触发视图实时更新
+                                }
+                                
+                            })
+                        })
+                    }
+                    
+                    item.controlAndFree = !item.controlAndFree
+                }else{
+                    this.noSecNav(item)
+                }
+                
+            },
+            // 没有二级菜单，单击新增到top或者回显
+            noSecNav(item){ 
+                // 给iframe的src赋值
+                // this.contents = item.src
+                 if(this.title.length == 0){
+                    this.title.push(item)
+                }
+                let arr = this.title
+                for(var i = 0;i < this.title.length;i++){
+                    if(item.id === this.title[i].id){
+                        this.lookIt(i)
+                        this.id=item.id
+                        this.database.forEach(x=>{
+                            x.sonMenu.forEach(y=>{
+                                if(y.sonMenu[0]){                            
+                                    y.sonMenu.forEach(z=>{               
+                                        this.$set(z,'iframeShow',false)   //触发视图实时更新
+                                    })
+                                }else{                                  
+                                this.$set(y,'iframeShow',false)   //触发视图实时更新  
+                                }
+                                
+                            })
+                        })
+                        item.iframeShow = true
+                        this.tryData = false
+                        break 
+                    }else{
+                        this.tryData = true
+                    }
+                } 
+                // 判断轮播导航项 在top 中没有（this.tryData === true）直接push，并左移
+                if(this.tryData === true){
+                    arr.push(item)
+                    this.id=item.id
+                    this.database.forEach(x=>{
+                        x.sonMenu.forEach(y=>{
+                            if(y.sonMenu[0]){                            
+                                y.sonMenu.forEach(z=>{               
+                                    this.$set(z,'iframeShow',false)   //触发视图实时更新
+                                })
+                            }else{                                  
+                                this.$set(y,'iframeShow',false)   //触发视图实时更新    
+                            }
+                            
+                        })
+                    })
+                    item.iframeShow = true
+                    this.title = [...new Set(arr)]
+
+                    this.diff = this.topWidth - 61 - this.title.length * this.topItemWidth
+                    if(this.diff > 0){
+                        if(this.diff < this.topItemWidth){
+                            this.lastDiff = this.diff
+                        }
+                    }else if(this.diff < 0){
+                        if(this.diff > -this.topItemWidth){
+                            this.valueL = this.topItemWidth - this.lastDiff
+                            this.lastDiff = this.diff
+                        }else{
+                            this.valueL = this.valueL + this.topItemWidth
+                        }
+                    }
+                }
+            },
+            //被选中的item 移动到可看到的位置( i为选中的item在整个title中的下标)
+            lookIt(i){
+                let longL = (i+1)* this.topItemWidth                 //该item右边 到back左边的距离
+                let longR =  this.topWidth - i* this.topItemWidth    //该item左边 到back右边的距离
+                //轮播导航项高亮隐藏在左边  需向右移动
+                let dataL = this.valueL
+                if(this.valueL >= longL){
+                    this.valueL -= (dataL - i* this.topItemWidth)
+                    this.valueR += (dataL - i* this.topItemWidth)
+                }
+                //轮播导航项高亮隐藏在右边  需向左移动
+                let dataR = this.valueR
+                if(this.valueR >= longR){
+                    this.valueR -= (dataR - (this.title.length - i -1)* this.topItemWidth)
+                    this.valueL += (dataR - (this.title.length - i -1)* this.topItemWidth)
+                }
+            },
+            // 点击 top item
+            handleclickTop(item){
+                this.id = item.id  
+
+                this.database.forEach(x=>{
+                    x.sonMenu.forEach(y=>{
+                        if(y.sonMenu[0]){       
+                            this.$set(y,'controlAndFree',false)                 //判断是否有二级菜单
+                            y.sonMenu.forEach(z=>{   
+                                // y.controlAndFree =false
+                                this.$set(z,'iframeShow',false)            //二级菜单的回显header,侧导航list,打开相应的二级菜单
+                                if(item.id === z.id){
+                                    this.titleId=x.id
+                                    this.list = x.sonMenu
+                                    this.listSec = y.sonMenu
+                                    this.$set(y,'controlAndFree',true)
+                                }
+                            })
+                        }else{   
+                            this.$set(y,'iframeShow',false)                                 //一级菜单的回显header和侧导航list
+                            if(y.id === item.id){
+                                this.titleId=x.id
+                                this.list = x.sonMenu
+                            }
+                        }
+                        this.$set(y,'iframeShow',true)
+                        
+                    })
+                })
+            },
+            // 侧边栏的收放
+            handlechange(){
+                this.ischange=!this.ischange
+            },
+            // 轮播导航的右按钮
+            topRight(){
+                let topwidth = 0-this.topWidth
+                if(this.diff < topwidth){
+                        if(this.valueR > topwidth){
+                        this.valueL += this.topWidth
+                        this.valueR -= this.topWidth
+                    }else if(this.valueR > 0){
+                        this.valueL += this.diff
+                        this.valueR =0
+                    }
+                }else if (this.diff < 0 ){
+                    this.valueL = 0 - this.diff
+                    this.valueR = 0
+                }
+                
+            },
+            // 轮播导航的右按钮
+            topLeft(){
+                let topwidth = 0-this.topWidth
+                if(this.diff < topwidth){
+                        if(this.valueL > topwidth){
+                        this.valueR += this.topWidth
+                        this.valueL -= this.topWidth
+                    }else if(this.valueL > 0){
+                        this.valueR += this.diff
+                        this.valueL =0
+                    }
+                }else if (this.diff < 0 ){
+                    this.valueR = 0 - this.diff
+                    this.valueL = 0
+                }
+                
+            },
+            // 关闭其他项
+            otherClose(){
+                this.title.forEach(item => {
+                    if(item.id === this.id){
+                        this.title = []
+                        this.title.push(item)
+                    }
+                });
+                this.rightKey = false
+                this.valueL =0
+                this.valueR =0
+            },
+            // 关闭所以项
+            allClose(){
+                this.initialize()   // 初始化
+                this.rightKey = false
+                this.valueL =0
+                this.valueR =0
+            },
+            // 删除某一项
+            deletes(index,e){
+                let aft = this.title[index+1]
+                let pre= this.title[index-1]
+
+                this.title.splice(index,1)
+                // 阻止事件冒泡
+                if(e&& e.stopPropagation){
+                    event.stopPropagation()
+                }else{
+                    event.cancelBubble = true; 
+                }
+                //焦点到删除的下一项，若没有焦点到上一项，都没有则初始化
+                if(aft){
+                    this.handleclickTop(aft)
+                    this.lookIt(index+1)
+                }else if(pre){
+                    this.handleclickTop(pre)
+                    this.lookIt(index-1)
+                }else{
+                    this.initialize()  // 初始化
+                }
+            }, 
+            // 切换侧导航
+            cutSilder(item){
+                this.list = item.sonMenu
+                this.titleId = item.id
+            },
+            // top item 的右键功能
+            rightClick(i,e){
+                console.log(i)
+                console.log(e)
+                this.rightKey = true
+                this.handleclickTop(i)
+                this. mouseLocationX = e.clientX
+                this. mouseLocationY = e.clientY
+            },
+           
+        },
+    })
+</script>
+
+</html>
